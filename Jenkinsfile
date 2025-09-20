@@ -25,15 +25,35 @@ pipeline {
             }
         }
 
-         stage('Deploy to Render') {
+        //  stage('Deploy to Render') {
+        //     steps {
+        //         sh """
+        //           curl -X POST https://api.render.com/deploy/${RENDER_SERVICE_ID} \
+        //           -H "Accept: application/json" \
+        //           -H "Authorization: Bearer ${RENDER_API_KEY}"
+        //         """
+        //     }
+        // }
+
+        stage('Deploy to Render') {
+    
             steps {
-                sh """
-                  curl -X POST https://api.render.com/deploy/${RENDER_SERVICE_ID} \
-                  -H "Accept: application/json" \
-                  -H "Authorization: Bearer ${RENDER_API_KEY}"
-                """
+                script {
+                    def payload = """{
+                    "serviceId": "${RENDER_SERVICE_ID}",
+                    "clearCache": true
+                    }""".stripIndent().trim()
+
+                    sh """
+                    curl -v -X POST \
+                        -H "Authorization: Bearer ${RENDER_API_KEY}" \
+                        -H "Content-Type: application/json" \
+                        -d '${payload.replace("'", "'\\''")}' \
+                        https://api.render.com/v1/services/${RENDER_SERVICE_ID}/deploys
+                    """
+                }
             }
-        }
+    }   
 
         stage('Debug') {
             steps {
