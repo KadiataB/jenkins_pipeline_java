@@ -65,21 +65,17 @@ pipeline {
                         "clearCache": true
                     }"""
 
-                    sh """
+                  sh """
                     curl -s -w '\\nHTTP %{http_code}\\n' -X POST \
-                        -H "Authorization: Bearer ${RENDER_API_KEY}" \
+                        -H "Authorization: Bearer ${env.RENDER_API_KEY}" \
                         -H "Content-Type: application/json" \
-                        -d @payload.json \
-                        https://api.render.com/v1/services/${SERVICE_ID}/deploys
-                    """
-
-
-                    sh """
-                    curl -s -w '\\nHTTP %{http_code}\\n' -X POST \
-                        -H 'Authorization: Bearer ${RENDER_API_KEY}' \
-                        -H 'Content-Type: application/json' \
-                        -d '{\"serviceId\":\"${SERVICE_ID}\",\"clearCache\":true}' \
-                        https://api.render.com/v1/services/${SERVICE_ID}/deploys
+                        --data-binary @- \
+                        https://api.render.com/v1/services/${SERVICE_ID}/deploys <<'EOF'
+                    {
+                    "serviceId": "${SERVICE_ID}",
+                    "clearCache": true
+                    }
+                    EOF
                     """
                 }
             }
