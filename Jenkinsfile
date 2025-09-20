@@ -28,7 +28,8 @@ pipeline {
 
         stage('Deploy to Render') {
             steps {
-
+                script {
+                   
                  sh """
                     curl -s -w '\\nHTTP %{http_code}\\n' -X POST \
                         -H "Authorization: Bearer ${RENDER_API_KEY}" \
