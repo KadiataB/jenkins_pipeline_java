@@ -4,7 +4,7 @@ pipeline {
     environment {
         IMAGE_NAME = "kadia08/springboot_app"
         JAVA_VERSION = "21"
-        RENDER_SERVICE_ID = "srv-d3729sre5dus738uujng"
+        SERVICE_ID = "srv-d3729sre5dus738uujng"
         RENDER_API_KEY   = "rnd_lJ9xjDi2XB4kg9F0FdD3kr2gziZC" // API
     }
 // https://api.render.com/deploy/srv-d3729sre5dus738uujng?key=E5_N-dKNaeA
@@ -39,19 +39,20 @@ pipeline {
     steps {
         script {
             // Create the JSON file safely
-            writeFile file: 'payload.json', text: """{
-              "serviceId": "${RENDER_SERVICE_ID}",
-              "clearCache": true
-            }"""
+            // writeFile file: 'payload.json', text: """{
+            //   "serviceId": "${RENDER_SERVICE_ID}",
+            //   "clearCache": true
+            // }"""
 
             // Call the Render Deploy API
-            sh """
+         sh """
             curl -s -w '\\nHTTP %{http_code}\\n' -X POST \
                 -H "Authorization: Bearer ${RENDER_API_KEY}" \
                 -H "Content-Type: application/json" \
-                --data-binary @payload.json \
-                https://api.render.com/v1/services/${RENDER_SERVICE_ID}/deploys
+                -d '{\"serviceId\":\"${SERVICE_ID}\",\"clearCache\":true}' \
+                https://api.render.com/v1/services/${SERVICE_ID}/deploys
             """
+
         }
     }
        }  
