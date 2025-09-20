@@ -1,13 +1,13 @@
-# Utilise une image JDK 21
-FROM eclipse-temurin:21-jdk-alpine
-
+# Étape 1 : build Maven
+FROM maven:3.9.2-eclipse-temurin-21 AS build
 WORKDIR /app
+COPY pom.xml .
+COPY src ./src
+RUN mvn clean package -DskipTests
 
-# Copie le jar produit par Maven
-COPY target/*.jar app.jar
-
-# Expose le port Spring Boot par défaut
+# Étape 2 : image finale
+FROM eclipse-temurin:21-jdk-alpine
+WORKDIR /app
+COPY --from=build /app/target/*.jar app.jar
 EXPOSE 8081
-
-# Commande pour lancer l’application
-ENTRYPOINT ["java","-jar","app.jar"]
+ENTRYPOINT ["java", "-jar", "app.jar"]
