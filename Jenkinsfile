@@ -35,25 +35,26 @@ pipeline {
         //     }
         // }
 
-        stage('Deploy to Render') {
-    
-            steps {
-                script {
-                    def payload = """{
-                    "serviceId": "${RENDER_SERVICE_ID}",
-                    "clearCache": true
-                    }""".stripIndent().trim()
+  stage('Deploy to Render') {
+    steps {
+        script {
+            // Create the JSON file safely
+            writeFile file: 'payload.json', text: """{
+              "serviceId": "${RENDER_SERVICE_ID}",
+              "clearCache": true
+            }"""
 
-                    sh """
-                    curl -v -X POST \
-                        -H "Authorization: Bearer ${RENDER_API_KEY}" \
-                        -H "Content-Type: application/json" \
-                        -d '${payload.replace("'", "'\\''")}' \
-                        https://api.render.com/v1/services/${RENDER_SERVICE_ID}/deploys
-                    """
-                }
-            }
-    }   
+            // Call the Render Deploy API
+            sh """
+            curl -s -w '\\nHTTP %{http_code}\\n' -X POST \
+                -H "Authorization: Bearer ${RENDER_API_KEY}" \
+                -H "Content-Type: application/json" \
+                --data-binary @payload.json \
+                https://api.render.com/v1/services/${RENDER_SERVICE_ID}/deploys
+            """
+        }
+    }
+       }  
 
         stage('Debug') {
             steps {
