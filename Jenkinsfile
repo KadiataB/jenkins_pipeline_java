@@ -35,27 +35,56 @@ pipeline {
         //     }
         // }
 
-  stage('Deploy to Render') {
-    steps {
-        script {
-            // Create the JSON file safely
-            // writeFile file: 'payload.json', text: """{
-            //   "serviceId": "${RENDER_SERVICE_ID}",
-            //   "clearCache": true
-            // }"""
+//   stage('Deploy to Render') {
+//     steps {
+//         script {
+//             // Create the JSON file safely
+//             // writeFile file: 'payload.json', text: """{
+//             //   "serviceId": "${RENDER_SERVICE_ID}",
+//             //   "clearCache": true
+//             // }"""
 
-            // Call the Render Deploy API
-         sh """
-            curl -s -w '\\nHTTP %{http_code}\\n' -X POST \
-                -H "Authorization: Bearer ${RENDER_API_KEY}" \
-                -H "Content-Type: application/json" \
-                -d '{\"serviceId\":\"${SERVICE_ID}\",\"clearCache\":true}' \
-                https://api.render.com/v1/services/${SERVICE_ID}/deploys
-            """
+//             // Call the Render Deploy API
+//          sh """
+//             curl -s -w '\\nHTTP %{http_code}\\n' -X POST \
+//                 -H "Authorization: Bearer ${RENDER_API_KEY}" \
+//                 -H "Content-Type: application/json" \
+//                 -d '{\"serviceId\":\"${SERVICE_ID}\",\"clearCache\":true}' \
+//                 https://api.render.com/v1/services/${SERVICE_ID}/deploys
+//             """
 
+//         }
+//     }
+//        }  
+
+
+        stage('Deploy to Render') {
+            steps {
+                script {
+                    writeFile file: 'payload.json', text: """{
+                        "clearCache": true
+                    }"""
+
+                    sh """
+                    curl -s -w '\\nHTTP %{http_code}\\n' -X POST \
+                        -H "Authorization: Bearer ${RENDER_API_KEY}" \
+                        -H "Content-Type: application/json" \
+                        -d @payload.json \
+                        https://api.render.com/v1/services/${SERVICE_ID}/deploys
+                    """
+
+
+                    sh """
+                    curl -s -w '\\nHTTP %{http_code}\\n' -X POST \
+                        -H 'Authorization: Bearer ${RENDER_API_KEY}' \
+                        -H 'Content-Type: application/json' \
+                        -d '{\"serviceId\":\"${SERVICE_ID}\",\"clearCache\":true}' \
+                        https://api.render.com/v1/services/${SERVICE_ID}/deploys
+                    """
+                }
+            }
         }
-    }
-       }  
+
 
         stage('Debug') {
             steps {
