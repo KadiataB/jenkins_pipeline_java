@@ -2,54 +2,23 @@ pipeline {
     agent any
 
     environment {
-        IMAGE_NAME = "kadia08/springboot_app"
-        JAVA_VERSION = "21"
-        SERVICE_ID = "srv-d3729sre5dus738uujng"
-        RENDER_API_KEY   = "rnd_lJ9xjDi2XB4kg9F0FdD3kr2gziZC" // API
+        IMAGE_NAME      = "kadia08/springboot_app"
+        JAVA_VERSION    = "21"
+        SERVICE_ID      = "srv-d3729sre5dus738uujng"
+        // Replace with your own Render Deploy Hook URL (Service → Manual Deploy → Deploy Hook)
+        RENDER_DEPLOY_HOOK_URL = "https://api.render.com/deploy/srv-d3729sre5dus738uujng?key=E5_N-dKNaeA" // Secret Text in Jenkins
     }
-// https://api.render.com/deploy/srv-d3729sre5dus738uujng?key=E5_N-dKNaeA
+
     stages {
         stage('Checkout') {
             steps {
                 git branch: 'main', url: 'https://github.com/KadiataB/jenkins_pipeline_java.git'
-
             }
         }
 
         stage('Build with Maven') {
             steps {
-                // Utilise Maven Wrapper si présent
                 sh "./mvnw clean package -DskipTests"
-                // Sinon
-                // sh "mvn clean package -DskipTests"
-            }
-        }
-
-
-        stage('Deploy to Render') {
-            steps {
-                script {
-                   
-                 sh """
-                    curl -s -w '\\nHTTP %{http_code}\\n' -X POST \
-                        -H "Authorization: Bearer ${RENDER_API_KEY}" \
-                        https://api.render.com/v1/services/${SERVICE_ID}/deploys
-                    """
-                }
-            }
-        }
-
-
-        stage('Debug') {
-            steps {
-                script {
-                    sh 'pwd'
-                    sh 'ls -l'
-                    sh 'whoami'
-                    sh 'java -version'
-                    sh 'docker version || true'
-                    sh 'docker info || true'
-                }
             }
         }
 
@@ -63,32 +32,48 @@ pipeline {
 
         stage('Push to DockerHub') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'dockerhub-creds',
-                                                 usernameVariable: 'DOCKER_USER',
-                                                 passwordVariable: 'DOCKER_PASS')]) {
+                withCredentials([usernamePassword(
+                    credentialsId: 'dockerhub-creds',
+                    usernameVariable: 'DOCKER_USER',
+                    passwordVariable: 'DOCKER_PASS'
+                )]) {
                     sh "echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin"
                     sh "docker push $IMAGE_NAME:${env.BUILD_NUMBER}"
                 }
             }
         }
 
-        stage('Deploy') {
+        stage('Deploy to Render') {
             steps {
-                sh """
-                   docker stop springboot_app || true
-                   docker rm springboot_app || true
-                   docker run -d --name springboot_app -p 8082:8081 $IMAGE_NAME:${env.BUILD_NUMBER}
-                """
+                script {
+                    def imgUrl = "docker.io/${IMAGE_NAME}:${env.BUILD_NUMBER}"
+                    sh """
+                       echo "Triggering Render deploy for image: ${imgUrl}"
+                       curl -s -w '\\nHTTP %{http_code}\\n' -X POST \
+                            "${RENDER_DEPLOY_HOOK_URL}?imgURL=${imgUrl}"
+                    """
+                }
+            }
+        }
+
+        stage('Debug (Optional)') {
+            steps {
+                sh 'pwd'
+                sh 'ls -l'
+                sh 'whoami'
+                sh 'java -version'
+                sh 'docker version || true'
+                sh 'docker info || true'
             }
         }
     }
 
     post {
         success {
-            echo "Déploiement réussi 🎉"
+            echo "✅ Deployment to Render successful!"
         }
         failure {
-            echo "Erreur lors du déploiement ❌"
+            echo "❌ Deployment failed."
         }
     }
 }
