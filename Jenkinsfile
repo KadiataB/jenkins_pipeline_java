@@ -4,8 +4,10 @@ pipeline {
     environment {
         IMAGE_NAME = "kadia08/springboot_app"
         JAVA_VERSION = "21"
+        RENDER_SERVICE_ID = "d3729sre5dus738uujng"
+        RENDER_API_KEY   = "E5_N-dKNaeA" // API
     }
-
+// https://api.render.com/deploy/srv-d3729sre5dus738uujng?key=E5_N-dKNaeA
     stages {
         stage('Checkout') {
             steps {
@@ -20,6 +22,16 @@ pipeline {
                 sh "./mvnw clean package -DskipTests"
                 // Sinon
                 // sh "mvn clean package -DskipTests"
+            }
+        }
+
+         stage('Deploy to Render') {
+            steps {
+                sh """
+                  curl -X POST https://api.render.com/deploy/srv-${RENDER_SERVICE_ID} \
+                  -H "Accept: application/json" \
+                  -H "Authorization: Bearer ${RENDER_API_KEY}"
+                """
             }
         }
 
