@@ -5,7 +5,7 @@ pipeline {
         IMAGE_NAME = "kadia08/springboot_app"
         JAVA_VERSION = "21"
         RENDER_SERVICE_ID = "d3729sre5dus738uujng"
-        RENDER_API_KEY   = "E5_N-dKNaeA" // API
+        RENDER_API_KEY   = "rnd_lJ9xjDi2XB4kg9F0FdD3kr2gziZC" // API
     }
 // https://api.render.com/deploy/srv-d3729sre5dus738uujng?key=E5_N-dKNaeA
     stages {
