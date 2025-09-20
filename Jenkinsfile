@@ -60,7 +60,7 @@ pipeline {
                 sh """
                    docker stop springboot_app || true
                    docker rm springboot_app || true
-                   docker run -d --name springboot_app -p 8082:8080 $IMAGE_NAME:${env.BUILD_NUMBER}
+                   docker run -d --name springboot_app -p 8082:8081 $IMAGE_NAME:${env.BUILD_NUMBER}
                 """
             }
         }
